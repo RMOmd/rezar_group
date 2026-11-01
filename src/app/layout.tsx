@@ -1,7 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
-import { Navbar } from "@/components/layout/Navbar";
-import { Footer } from "@/components/layout/Footer";
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -35,6 +33,7 @@ export const metadata: Metadata = {
 
 import { LanguageProvider } from "@/context/LanguageContext";
 import { FavoritesProvider } from "@/context/FavoritesContext";
+import { AppShell } from "@/components/layout/AppShell";
 
 export default function RootLayout({
   children,
@@ -46,9 +45,7 @@ export default function RootLayout({
       <body className="min-h-screen bg-[#0B0B0C] text-white flex flex-col antialiased selection:bg-zinc-800 selection:text-white">
         <LanguageProvider>
           <FavoritesProvider>
-            <Navbar />
-            <main className="flex-1">{children}</main>
-            <Footer />
+            <AppShell>{children}</AppShell>
           </FavoritesProvider>
         </LanguageProvider>
       </body>
