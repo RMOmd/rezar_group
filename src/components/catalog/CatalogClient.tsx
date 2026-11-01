@@ -19,8 +19,6 @@ import { VehicleCard } from "@/components/catalog/VehicleCard";
 import { FilterSidebar } from "@/components/catalog/FilterSidebar";
 import { FilterDrawer } from "@/components/catalog/FilterDrawer";
 import { ActiveFilterTags } from "@/components/catalog/ActiveFilterTags";
-import { MappingAdminModal } from "@/components/admin/MappingAdminModal";
-import { CatalogSyncService } from "@/services/catalogSyncService";
 import { brands as allBrands } from "@/data/brands";
 import { models as allModels } from "@/data/models";
 import { useLanguage } from "@/context/LanguageContext";
@@ -49,12 +47,6 @@ export function CatalogClient({
   const searchParams = useSearchParams();
   const [, startTransition] = useTransition();
   const { t, locale } = useLanguage();
-
-  // Admin mapping modal state
-  const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
-  const [pendingCount, setPendingCount] = useState(() =>
-    CatalogSyncService.getPendingItems().length
-  );
 
   // Read initial filter values from URL params or props
   const [filters, setFilters] = useState<VehicleFilterParams>(() => {
@@ -404,37 +396,20 @@ export function CatalogClient({
               </p>
             </div>
 
-            {/* Quick Search & Supplier Sync Trigger */}
-            <div className="flex items-center gap-3 w-full md:w-auto">
-              <div className="relative flex-1 md:w-72">
-                <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400" />
-                <input
-                  type="text"
-                  placeholder={t.catalog.searchPlaceholder}
-                  value={filters.searchQuery || ""}
-                  onChange={(e) =>
-                    handleFilterChange({
-                      searchQuery: e.target.value ? e.target.value : undefined,
-                    })
-                  }
-                  className="w-full bg-[#141416] border border-zinc-800 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-zinc-500 transition-colors"
-                />
-              </div>
-
-              {/* Admin Supplier Mapping Tool Button */}
-              <button
-                onClick={() => setIsAdminModalOpen(true)}
-                className="hidden sm:inline-flex items-center gap-2 px-3 py-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-xs text-zinc-300 hover:text-white hover:border-zinc-700 transition-colors"
-                title="Синхронізація довідників марок і моделей з API Х-Авто"
-              >
-                <Layers className="w-4 h-4 text-amber-400" />
-                <span className="font-medium">Х-Авто</span>
-                {pendingCount > 0 && (
-                  <span className="px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-mono text-[10px] font-bold border border-amber-500/30">
-                    {pendingCount}
-                  </span>
-                )}
-              </button>
+            {/* Quick Keyword Search Input */}
+            <div className="relative w-full md:w-72">
+              <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400" />
+              <input
+                type="text"
+                placeholder={t.catalog.searchPlaceholder}
+                value={filters.searchQuery || ""}
+                onChange={(e) =>
+                  handleFilterChange({
+                    searchQuery: e.target.value ? e.target.value : undefined,
+                  })
+                }
+                className="w-full bg-[#141416] border border-zinc-800 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-zinc-500 transition-colors"
+              />
             </div>
           </div>
 
@@ -506,20 +481,6 @@ export function CatalogClient({
                 {activeFiltersCount > 0 && (
                   <span className="w-4 h-4 rounded-full bg-white text-black text-[10px] font-bold flex items-center justify-center">
                     {activeFiltersCount}
-                  </span>
-                )}
-              </button>
-
-              {/* Mobile Supplier Mapping Button */}
-              <button
-                onClick={() => setIsAdminModalOpen(true)}
-                className="sm:hidden inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-zinc-900 border border-zinc-800 text-[11px] text-zinc-300"
-              >
-                <Layers className="w-3 h-3 text-amber-400" />
-                <span>Х-Авто</span>
-                {pendingCount > 0 && (
-                  <span className="px-1 py-0.2 rounded-full bg-amber-500 text-black text-[9px] font-bold">
-                    {pendingCount}
                   </span>
                 )}
               </button>
@@ -657,15 +618,6 @@ export function CatalogClient({
         models={availableModels}
         bounds={bounds}
         totalFound={totalFound}
-      />
-
-      {/* Admin X-Auto Mapping Modal */}
-      <MappingAdminModal
-        isOpen={isAdminModalOpen}
-        onClose={() => {
-          setIsAdminModalOpen(false);
-          setPendingCount(CatalogSyncService.getPendingItems().length);
-        }}
       />
     </div>
   );

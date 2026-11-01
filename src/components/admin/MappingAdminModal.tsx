@@ -87,7 +87,7 @@ export function MappingAdminModal({ isOpen, onClose }: MappingAdminModalProps) {
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="text-base sm:text-lg font-semibold text-white">
-                  Синхронізація довідників Х-Авто
+                  Синхронізація зовнішніх довідників
                 </h2>
                 <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                   REZAR ENGINE v2
@@ -282,7 +282,7 @@ export function MappingAdminModal({ isOpen, onClose }: MappingAdminModalProps) {
           <div className="pt-4 border-t border-zinc-800 space-y-3">
             <h3 className="text-xs uppercase tracking-wider font-semibold text-zinc-300 flex items-center gap-2">
               <RefreshCw className="w-4 h-4 text-zinc-400" />
-              <span>Тестування нормалізатора постачальника Х-Авто</span>
+              <span>Тестування нормалізатора постачальника</span>
             </h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">

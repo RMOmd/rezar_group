@@ -64,7 +64,7 @@ const BRAND_ALIASES: Record<string, string> = {
 const brandMappings: ProviderBrandMapping[] = [
   {
     id: "map_b_1",
-    provider: "x_auto",
+    provider: "supplier_feed",
     raw_brand_name: "PORSCHE AG",
     internal_brand_id: "brand_porsche",
     internal_brand_name: "Porsche",
@@ -75,7 +75,7 @@ const brandMappings: ProviderBrandMapping[] = [
   },
   {
     id: "map_b_2",
-    provider: "x_auto",
+    provider: "supplier_feed",
     raw_brand_name: "MERCEDES-BENZ",
     internal_brand_id: "brand_mercedes_benz",
     internal_brand_name: "Mercedes-Benz",
@@ -86,7 +86,7 @@ const brandMappings: ProviderBrandMapping[] = [
   },
   {
     id: "map_b_3",
-    provider: "x_auto",
+    provider: "supplier_feed",
     raw_brand_name: "BMW AG / M GMBH",
     internal_brand_id: "brand_bmw",
     internal_brand_name: "BMW",
@@ -100,7 +100,7 @@ const brandMappings: ProviderBrandMapping[] = [
 const modelMappings: ProviderModelMapping[] = [
   {
     id: "map_m_1",
-    provider: "x_auto",
+    provider: "supplier_feed",
     raw_brand_name: "PORSCHE AG",
     raw_model_name: "911 Carrera 4S Coupe (992)",
     internal_brand_id: "brand_porsche",
@@ -126,7 +126,7 @@ const pendingQueue: {
 }[] = [
   {
     id: "pen_1",
-    provider: "x_auto",
+    provider: "supplier_feed",
     rawBrand: "PORSCHE AG SPECIAL",
     rawModel: "911 GT3 Touring Package",
     suggestedBrandId: "brand_porsche",
@@ -136,7 +136,7 @@ const pendingQueue: {
   },
   {
     id: "pen_2",
-    provider: "x_auto",
+    provider: "supplier_feed",
     rawBrand: "ALPINA BURKARD BOVENSIEPEN",
     rawModel: "B8 Gran Coupe AWD",
     suggestedBrandId: "brand_bmw",
@@ -146,7 +146,7 @@ const pendingQueue: {
   },
   {
     id: "pen_3",
-    provider: "x_auto",
+    provider: "supplier_feed",
     rawBrand: "LUCID MOTORS",
     rawModel: "Air Sapphire Tri-Motor",
     suggestedBrandId: undefined,
@@ -273,7 +273,7 @@ export class CatalogSyncService {
   public static syncItem(
     rawBrand: string,
     rawModel: string,
-    provider: string = "x_auto"
+    provider: string = "supplier_feed"
   ): SyncResult {
     const brandMatch = this.matchBrand(rawBrand);
 
