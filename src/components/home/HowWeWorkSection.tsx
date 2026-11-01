@@ -9,7 +9,7 @@ export function HowWeWorkSection() {
   const stepNumbers = ["01", "02", "03", "04"];
 
   return (
-    <section id="process" className="py-20 sm:py-28 bg-[#141416] border-y border-zinc-800/80">
+    <section id="process" className="py-20 sm:py-28 bg-[#141416] border-y border-zinc-800/80 scroll-mt-20 sm:scroll-mt-24">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="max-w-2xl mb-14 sm:mb-20">

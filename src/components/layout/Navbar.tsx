@@ -1,13 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Heart, Menu, X, PhoneCall, ChevronRight } from "lucide-react";
 import { useFavorites } from "@/hooks/useFavorites";
 import { LeadModal } from "@/components/common/LeadModal";
 import { COMPANY_CONFIG } from "@/data/companyConfig";
-
 import { useLanguage } from "@/context/LanguageContext";
 import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
 
@@ -18,14 +17,140 @@ export function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isLeadModalOpen, setIsLeadModalOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState<string>("home");
 
+  // Scroll spy & scrolled header state
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20);
+
+      if (pathname === "/") {
+        // Detect bottom of page for contacts
+        const scrollPosition = window.scrollY + window.innerHeight;
+        const totalHeight = document.documentElement.scrollHeight;
+        if (totalHeight - scrollPosition < 160) {
+          setActiveSection("contacts");
+          return;
+        }
+
+        const sections = [
+          { id: "contacts", topOffset: 200 },
+          { id: "reviews", topOffset: 200 },
+          { id: "process", topOffset: 200 },
+          { id: "about", topOffset: 200 },
+        ];
+
+        let found = false;
+        for (const sec of sections) {
+          const el = document.getElementById(sec.id);
+          if (el) {
+            const rect = el.getBoundingClientRect();
+            if (rect.top <= sec.topOffset && rect.bottom >= 100) {
+              setActiveSection(sec.id);
+              found = true;
+              break;
+            }
+          }
+        }
+
+        if (!found) {
+          setActiveSection("home");
+        }
+      }
     };
-    window.addEventListener("scroll", handleScroll);
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll(); // Initial check
+
     return () => window.removeEventListener("scroll", handleScroll);
+  }, [pathname]);
+
+  // Handle hash scrolling when arriving from other pages
+  useEffect(() => {
+    if (pathname === "/" && typeof window !== "undefined" && window.location.hash) {
+      const targetId = window.location.hash.replace("#", "");
+      const timer = setTimeout(() => {
+        const el = document.getElementById(targetId);
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth" });
+          setActiveSection(targetId);
+        }
+      }, 150);
+      return () => clearTimeout(timer);
+    }
+  }, [pathname]);
+
+  // Lock body scroll when mobile menu is open
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isMobileMenuOpen]);
+
+  // Close on Escape key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setIsMobileMenuOpen(false);
+        setIsLeadModalOpen(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
+
+  // Handle link clicks with smooth scroll
+  const handleNavClick = useCallback(
+    (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+      setIsMobileMenuOpen(false);
+
+      if (href === "/") {
+        if (pathname === "/") {
+          e.preventDefault();
+          window.scrollTo({ top: 0, behavior: "smooth" });
+          if (window.location.hash) {
+            window.history.pushState(null, "", "/");
+          }
+          setActiveSection("home");
+        }
+        return;
+      }
+
+      if (href.startsWith("/#")) {
+        const targetId = href.replace("/#", "");
+        if (pathname === "/") {
+          e.preventDefault();
+          const el = document.getElementById(targetId);
+          if (el) {
+            el.scrollIntoView({ behavior: "smooth" });
+            window.history.pushState(null, "", href);
+            setActiveSection(targetId);
+          }
+        }
+      }
+    },
+    [pathname]
+  );
+
+  const handleLogoClick = useCallback(
+    (e: React.MouseEvent<HTMLAnchorElement>) => {
+      setIsMobileMenuOpen(false);
+      if (pathname === "/") {
+        e.preventDefault();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        if (window.location.hash) {
+          window.history.pushState(null, "", "/");
+        }
+        setActiveSection("home");
+      }
+    },
+    [pathname]
+  );
 
   const navLinks = [
     { label: t.nav.home, href: "/" },
@@ -35,6 +160,20 @@ export function Navbar() {
     { label: t.nav.reviews, href: "/#reviews" },
     { label: t.nav.contacts, href: "/#contacts" },
   ];
+
+  const isLinkActive = (href: string) => {
+    if (href === "/") {
+      return pathname === "/" && activeSection === "home";
+    }
+    if (href === "/catalog") {
+      return pathname.startsWith("/catalog");
+    }
+    if (href.startsWith("/#")) {
+      const targetId = href.replace("/#", "");
+      return pathname === "/" && activeSection === targetId;
+    }
+    return pathname === href;
+  };
 
   return (
     <>
@@ -48,7 +187,11 @@ export function Navbar() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
             {/* Logo */}
-            <Link href="/" className="group flex flex-col items-start select-none">
+            <Link
+              href="/"
+              onClick={handleLogoClick}
+              className="group flex flex-col items-start select-none"
+            >
               <div className="flex items-center gap-1.5">
                 <span className="text-xl sm:text-2xl font-black tracking-[0.25em] text-white group-hover:text-zinc-200 transition-colors uppercase">
                   REZAR
@@ -65,22 +208,21 @@ export function Navbar() {
             {/* Desktop Navigation */}
             <nav className="hidden lg:flex items-center gap-8">
               {navLinks.map((link) => {
-                const isActive =
-                  pathname === link.href ||
-                  (link.href !== "/" && pathname.startsWith(link.href));
+                const active = isLinkActive(link.href);
                 return (
                   <Link
                     key={link.href}
                     href={link.href}
+                    onClick={(e) => handleNavClick(e, link.href)}
                     className={`text-sm tracking-wide transition-colors relative py-1 ${
-                      isActive
+                      active
                         ? "text-white font-medium"
                         : "text-zinc-400 hover:text-white"
                     }`}
                   >
                     {link.label}
-                    {isActive && (
-                      <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-white rounded-full" />
+                    {active && (
+                      <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-white rounded-full transition-all" />
                     )}
                   </Link>
                 );
@@ -95,13 +237,27 @@ export function Navbar() {
               {/* Favorites Link */}
               <Link
                 href="/favorites"
-                className="relative p-2.5 rounded-full bg-zinc-900/80 hover:bg-zinc-800 border border-zinc-800/80 text-zinc-300 hover:text-white transition-all"
+                className={`relative p-2.5 rounded-full border transition-all ${
+                  pathname === "/favorites"
+                    ? "bg-white text-black border-white shadow-lg"
+                    : "bg-zinc-900/80 hover:bg-zinc-800 border-zinc-800/80 text-zinc-300 hover:text-white"
+                }`}
                 title={t.nav.favorites}
                 aria-label={t.nav.favorites}
               >
-                <Heart className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+                <Heart
+                  className={`w-4 h-4 sm:w-4.5 sm:h-4.5 ${
+                    pathname === "/favorites" ? "fill-black stroke-black" : ""
+                  }`}
+                />
                 {favoritesCount > 0 && (
-                  <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-white text-black text-[10px] font-bold flex items-center justify-center shadow-lg animate-in zoom-in-50">
+                  <span
+                    className={`absolute -top-1 -right-1 w-5 h-5 rounded-full text-[10px] font-bold flex items-center justify-center shadow-lg animate-in zoom-in-50 ${
+                      pathname === "/favorites"
+                        ? "bg-black text-white"
+                        : "bg-white text-black"
+                    }`}
+                  >
                     {favoritesCount}
                   </span>
                 )}
@@ -109,8 +265,9 @@ export function Navbar() {
 
               {/* Contact Button */}
               <button
+                type="button"
                 onClick={() => setIsLeadModalOpen(true)}
-                className="hidden sm:inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white text-black text-xs font-semibold tracking-wider uppercase hover:bg-zinc-200 transition-all active:scale-95 shadow-md"
+                className="hidden sm:inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white text-black text-xs font-semibold tracking-wider uppercase hover:bg-zinc-200 transition-all active:scale-95 shadow-md cursor-pointer"
               >
                 <PhoneCall className="w-3.5 h-3.5" />
                 {t.nav.contactUs}
@@ -118,9 +275,11 @@ export function Navbar() {
 
               {/* Mobile Menu Toggle Button */}
               <button
+                type="button"
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="lg:hidden p-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-white"
-                aria-label="Toggle menu"
+                className="lg:hidden p-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-white cursor-pointer active:scale-95 transition-all"
+                aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
+                aria-expanded={isMobileMenuOpen}
               >
                 {isMobileMenuOpen ? (
                   <X className="w-5 h-5" />
@@ -135,7 +294,7 @@ export function Navbar() {
 
       {/* Mobile Drawer Menu */}
       {isMobileMenuOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden">
+        <div className="fixed inset-0 z-50 lg:hidden animate-in fade-in duration-200">
           {/* Backdrop */}
           <div
             className="fixed inset-0 bg-black/80 backdrop-blur-md transition-opacity"
@@ -143,20 +302,26 @@ export function Navbar() {
           />
 
           {/* Drawer content */}
-          <div className="fixed top-0 right-0 bottom-0 w-[82%] max-w-sm bg-[#0E0E10] border-l border-zinc-800 p-6 flex flex-col justify-between shadow-2xl">
+          <div className="fixed top-0 right-0 bottom-0 w-[82%] max-w-sm bg-[#0E0E10] border-l border-zinc-800 p-6 flex flex-col justify-between shadow-2xl overflow-y-auto animate-in slide-in-from-right duration-300">
             <div>
               <div className="flex items-center justify-between pb-6 border-b border-zinc-800">
-                <div className="flex items-center gap-2">
+                <Link
+                  href="/"
+                  onClick={handleLogoClick}
+                  className="flex items-center gap-2"
+                >
                   <span className="text-xl font-bold tracking-[0.2em] text-white">
                     REZAR
                   </span>
                   <span className="text-xs text-zinc-300 tracking-widest">
                     GROUP
                   </span>
-                </div>
+                </Link>
                 <button
+                  type="button"
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="p-2 rounded-full text-zinc-400 hover:text-white hover:bg-zinc-800"
+                  className="p-2 rounded-full text-zinc-400 hover:text-white hover:bg-zinc-800 cursor-pointer"
+                  aria-label="Close menu"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -164,25 +329,46 @@ export function Navbar() {
 
               {/* Links */}
               <div className="py-6 space-y-1">
-                {navLinks.map((link) => (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="flex items-center justify-between px-3 py-3 rounded-xl text-base text-zinc-300 hover:text-white hover:bg-zinc-900 transition-colors"
-                  >
-                    <span>{link.label}</span>
-                    <ChevronRight className="w-4 h-4 text-zinc-400" />
-                  </Link>
-                ))}
+                {navLinks.map((link) => {
+                  const active = isLinkActive(link.href);
+                  return (
+                    <Link
+                      key={link.href}
+                      href={link.href}
+                      onClick={(e) => handleNavClick(e, link.href)}
+                      className={`flex items-center justify-between px-3 py-3 rounded-xl text-base transition-colors ${
+                        active
+                          ? "bg-zinc-900 text-white font-medium border border-zinc-800"
+                          : "text-zinc-300 hover:text-white hover:bg-zinc-900/60"
+                      }`}
+                    >
+                      <span>{link.label}</span>
+                      <ChevronRight
+                        className={`w-4 h-4 transition-transform ${
+                          active ? "text-white translate-x-0.5" : "text-zinc-500"
+                        }`}
+                      />
+                    </Link>
+                  );
+                })}
 
                 <Link
                   href="/favorites"
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="flex items-center justify-between px-3 py-3 rounded-xl text-base text-zinc-300 hover:text-white hover:bg-zinc-900 transition-colors"
+                  className={`flex items-center justify-between px-3 py-3 rounded-xl text-base transition-colors ${
+                    pathname === "/favorites"
+                      ? "bg-zinc-900 text-white font-medium border border-zinc-800"
+                      : "text-zinc-300 hover:text-white hover:bg-zinc-900/60"
+                  }`}
                 >
                   <span className="flex items-center gap-2.5">
-                    <Heart className="w-4 h-4 text-zinc-400" />
+                    <Heart
+                      className={`w-4 h-4 ${
+                        pathname === "/favorites"
+                          ? "fill-rose-500 stroke-rose-500 text-rose-500"
+                          : "text-zinc-400"
+                      }`}
+                    />
                     {t.nav.favorites}
                   </span>
                   {favoritesCount > 0 && (
@@ -193,8 +379,8 @@ export function Navbar() {
                 </Link>
 
                 <div className="pt-4 px-3">
-                  <span className="text-[10px] uppercase tracking-widest text-zinc-400 block mb-2">
-                    Мова / Language
+                  <span className="text-[10px] uppercase tracking-widest text-zinc-400 block mb-2 font-mono">
+                    {t.footer.navTitle || "МОВА / LANGUAGE"}
                   </span>
                   <LanguageSwitcher />
                 </div>
@@ -204,11 +390,12 @@ export function Navbar() {
             {/* Bottom contact info */}
             <div className="pt-6 border-t border-zinc-800 space-y-4">
               <button
+                type="button"
                 onClick={() => {
                   setIsMobileMenuOpen(false);
                   setIsLeadModalOpen(true);
                 }}
-                className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-white text-black text-xs font-bold uppercase tracking-wider hover:bg-zinc-200 transition-all"
+                className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-white text-black text-xs font-bold uppercase tracking-wider hover:bg-zinc-200 transition-all cursor-pointer shadow-lg active:scale-98"
               >
                 <PhoneCall className="w-4 h-4" />
                 {t.nav.contactUs}
@@ -238,7 +425,7 @@ export function Navbar() {
       <LeadModal
         isOpen={isLeadModalOpen}
         onClose={() => setIsLeadModalOpen(false)}
-        sourceContext="Зворотний зв'язок"
+        sourceContext="Шапка сайту"
       />
     </>
   );

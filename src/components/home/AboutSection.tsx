@@ -12,7 +12,7 @@ export function AboutSection() {
 
   return (
     <>
-      <section id="about" className="py-20 sm:py-28 bg-[#0B0B0C] overflow-hidden">
+      <section id="about" className="py-20 sm:py-28 bg-[#0B0B0C] overflow-hidden scroll-mt-20 sm:scroll-mt-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             {/* Visual Box with Premium Automotive Shot */}

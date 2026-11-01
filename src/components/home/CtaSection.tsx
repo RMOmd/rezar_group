@@ -12,7 +12,7 @@ export function CtaSection() {
 
   return (
     <>
-      <section id="contacts" className="py-20 sm:py-28 bg-[#0B0B0C]">
+      <section id="contacts" className="py-20 sm:py-28 bg-[#0B0B0C] scroll-mt-20 sm:scroll-mt-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="relative rounded-3xl bg-gradient-to-br from-[#1B1B1E] via-[#141416] to-[#0E0E10] border border-zinc-800 p-8 sm:p-14 lg:p-20 overflow-hidden shadow-2xl">
             {/* Subtle glow effect */}
