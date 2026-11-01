@@ -1,10 +1,38 @@
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { VehicleService } from "@/services/vehicleService";
 import { VehicleDetailClient } from "./VehicleDetailClient";
 import { CatalogClient } from "@/components/catalog/CatalogClient";
+import { VEHICLES } from "@/data/vehicles";
+import { brands } from "@/data/brands";
+import { models } from "@/data/models";
 
 interface PageProps {
   params: Promise<{ slug: string[] }>;
+}
+
+export async function generateStaticParams() {
+  const params: { slug: string[] }[] = [];
+
+  // 1. Vehicle detail pages: /catalog/{vehicle-id}
+  for (const vehicle of VEHICLES) {
+    params.push({ slug: [vehicle.id] });
+  }
+
+  // 2. Brand catalog pages: /catalog/{brand-slug}
+  for (const brand of brands) {
+    params.push({ slug: [brand.slug] });
+  }
+
+  // 3. Model catalog pages: /catalog/{brand-slug}/{model-slug}
+  for (const model of models) {
+    const brand = brands.find((b) => b.id === model.brand_id);
+    if (brand) {
+      params.push({ slug: [brand.slug, model.slug] });
+    }
+  }
+
+  return params;
 }
 
 export async function generateMetadata(props: PageProps) {
@@ -123,14 +151,22 @@ export default async function CatalogDynamicPage(props: PageProps) {
       ]);
 
       return (
-        <CatalogClient
-          initialBrands={brands}
-          bounds={bounds}
-          initialVehicles={initialVehiclesData.vehicles}
-          initialTotal={initialVehiclesData.total}
-          initialHasMore={initialVehiclesData.hasMore}
-          activeBrand={brand}
-        />
+        <Suspense
+          fallback={
+            <div className="min-h-screen pt-32 pb-20 bg-[#0B0B0C] flex items-center justify-center">
+              <div className="w-8 h-8 border-2 border-zinc-700 border-t-white rounded-full animate-spin" />
+            </div>
+          }
+        >
+          <CatalogClient
+            initialBrands={brands}
+            bounds={bounds}
+            initialVehicles={initialVehiclesData.vehicles}
+            initialTotal={initialVehiclesData.total}
+            initialHasMore={initialVehiclesData.hasMore}
+            activeBrand={brand}
+          />
+        </Suspense>
       );
     }
 
@@ -160,15 +196,23 @@ export default async function CatalogDynamicPage(props: PageProps) {
     ]);
 
     return (
-      <CatalogClient
-        initialBrands={brands}
-        bounds={bounds}
-        initialVehicles={initialVehiclesData.vehicles}
-        initialTotal={initialVehiclesData.total}
-        initialHasMore={initialVehiclesData.hasMore}
-        activeBrand={brand}
-        activeModel={model}
-      />
+      <Suspense
+        fallback={
+          <div className="min-h-screen pt-32 pb-20 bg-[#0B0B0C] flex items-center justify-center">
+            <div className="w-8 h-8 border-2 border-zinc-700 border-t-white rounded-full animate-spin" />
+          </div>
+        }
+      >
+        <CatalogClient
+          initialBrands={brands}
+          bounds={bounds}
+          initialVehicles={initialVehiclesData.vehicles}
+          initialTotal={initialVehiclesData.total}
+          initialHasMore={initialVehiclesData.hasMore}
+          activeBrand={brand}
+          activeModel={model}
+        />
+      </Suspense>
     );
   }
 

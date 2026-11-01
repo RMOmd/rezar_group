@@ -3,6 +3,12 @@ import { VehicleService } from "@/services/vehicleService";
 import { RecommendationEngine } from "@/services/recommendationEngine";
 import { VEHICLES } from "@/data/vehicles";
 
+export const dynamic = "force-static";
+
+export async function generateStaticParams() {
+  return VEHICLES.map((v) => ({ id: v.id }));
+}
+
 interface RouteParams {
   params: Promise<{ id: string }>;
 }
@@ -27,9 +33,8 @@ export async function GET(request: NextRequest, props: RouteParams) {
       );
     }
 
-    const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get("page") || "1", 10);
-    const limit = parseInt(searchParams.get("limit") || "12", 10);
+    const page = 1;
+    const limit = 12;
 
     const result = RecommendationEngine.getSimilarVehicles(
       targetVehicle,
