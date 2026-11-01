@@ -32,7 +32,7 @@ export function VehicleCard({ vehicle, priority = false }: VehicleCardProps) {
 
   return (
     <div className="group relative bg-[#1B1B1E] rounded-2xl overflow-hidden border border-zinc-800/80 hover:border-zinc-700/80 transition-all duration-300 hover:shadow-2xl flex flex-col h-full">
-      {/* Clickable Card Link for the entire container */}
+      {/* Clickable image area */}
       <Link
         href={`/catalog/${vehicle.id}`}
         className="block relative aspect-[16/10] overflow-hidden bg-zinc-900"
@@ -47,50 +47,63 @@ export function VehicleCard({ vehicle, priority = false }: VehicleCardProps) {
           className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
         />
 
-        {/* Gradient overlay for readability */}
+        {/* Gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent opacity-80" />
 
-        {/* Top Badges Bar */}
-        <div className="absolute top-2.5 left-2.5 right-2.5 flex items-center justify-between gap-1.5 z-10 pointer-events-none">
-          {/* Status Badge */}
+        {/* Top-left Badges (status + photo count) — pointer-events-none so link still works */}
+        <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5 z-10 pointer-events-none">
           <span
             className={`text-[10px] sm:text-xs font-medium px-2.5 py-1 rounded-full backdrop-blur-md ${statusInfo.badgeClass}`}
           >
             {statusInfo.label}
           </span>
-
-          {/* Photo Count */}
           <div className="flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded-full bg-black/60 backdrop-blur-md text-zinc-300 border border-white/10">
             <Camera className="w-3 h-3" />
             <span>{vehicle.images.length}</span>
           </div>
         </div>
 
-        {/* Time Ago Tag (Bottom-left of image on hover) */}
+        {/* Time Ago Tag */}
         <div className="absolute bottom-2 left-2.5 z-10 text-[10px] font-mono text-zinc-400 backdrop-blur-sm px-1.5 py-0.5 rounded bg-black/40">
           {timeAgo(vehicle.createdAt, locale)}
         </div>
       </Link>
 
-      {/* Favorite Button (Explicit click handler, isolated from link) */}
-      <button
-        type="button"
+      {/*
+        Favorite Button — positioned OUTSIDE <Link> in the DOM.
+        The wrapper div with z-30 sits on top of the Link area and
+        stops ALL pointer events from reaching the Link beneath it.
+        This guarantees that clicking the heart NEVER triggers navigation.
+      */}
+      <div
+        className="absolute top-2.5 right-2.5 z-30"
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();
-          toggleFavorite(vehicle.id, e);
         }}
-        aria-label={favorited ? "Remove from favorites" : "Add to favorites"}
-        className={`absolute top-2.5 right-2.5 z-20 p-2 sm:p-2.5 rounded-full backdrop-blur-md border transition-all active:scale-90 cursor-pointer ${
-          favorited
-            ? "bg-rose-500/20 text-rose-400 border-rose-500/40"
-            : "bg-black/50 text-white/80 border-white/10 hover:text-white hover:bg-black/80"
-        }`}
+        onPointerDown={(e) => {
+          e.stopPropagation();
+        }}
       >
-        <Heart
-          className={`w-4 h-4 ${favorited ? "fill-rose-500 stroke-rose-500" : ""}`}
-        />
-      </button>
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            toggleFavorite(vehicle.id);
+          }}
+          aria-label={favorited ? "Remove from favorites" : "Add to favorites"}
+          className={`p-2 sm:p-2.5 rounded-full backdrop-blur-md border transition-all active:scale-90 cursor-pointer ${
+            favorited
+              ? "bg-rose-500/20 text-rose-400 border-rose-500/40"
+              : "bg-black/50 text-white/80 border-white/10 hover:text-white hover:bg-black/80"
+          }`}
+        >
+          <Heart
+            className={`w-4 h-4 pointer-events-none ${favorited ? "fill-rose-500 stroke-rose-500" : ""}`}
+          />
+        </button>
+      </div>
 
       {/* Vehicle Info */}
       <div className="p-3.5 sm:p-5 flex flex-col flex-grow justify-between">

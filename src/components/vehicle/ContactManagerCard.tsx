@@ -69,7 +69,7 @@ export function ContactManagerCard({ vehicle }: ContactManagerCardProps) {
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                toggleFavorite(vehicle.id, e);
+                toggleFavorite(vehicle.id);
               }}
               className={`p-2 rounded-full border transition-all cursor-pointer ${
                 favorited
